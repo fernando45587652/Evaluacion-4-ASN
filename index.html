@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa Interactivo - Google Maps API</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🌍 Buscador con Google Maps API</h2>
+
+    <div class="row mb-3">
+      <div class="col-md-9">
+        <input type="text" id="buscar" class="form-control" placeholder="Buscar dirección o ciudad..." onkeydown="if(event.key === 'Enter') buscarLugar()">
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100" onclick="buscarLugar()">🔍 Buscar</button>
+      </div>
+    </div>
+
+    <div class="text-end mb-2">
+      <button class="btn btn-outline-success btn-sm" onclick="miUbicacion()">📍 Mi ubicación</button>
+    </div>
+
+    <div id="map"></div>
+  </div>
+
+  <!-- Google Maps API (Reemplaza con tu clave real) -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD3AZwveruM2iDBsPcdyXByFkFEVe8Fd5I&callback=inicializarMapa&libraries=places" async defer></script>
+  AIzaSyD3AZwveruM2iDBsPcdyXByFkFEVe8Fd5I
+  <script>
+    let map;
+    let geocoder;
+    let marcador;
+    let infoWindow;
+
+    function inicializarMapa() {
+      const centro = { lat: 13.6929, lng: -89.2182 }; // San Salvador
+
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: centro,
+        zoom: 13,
+        mapTypeControl: false,
+      });
+
+      geocoder = new google.maps.Geocoder();
+      infoWindow = new google.maps.InfoWindow();
+
+      marcador = new google.maps.Marker({
+        map: map,
+        position: centro,
+        title: "Ubicación inicial",
+        animation: google.maps.Animation.DROP
+      });
+    }
+
+    function buscarLugar() {
+      const direccion = document.getElementById("buscar").value.trim();
+      if (!direccion) {
+        alert("🔔 Por favor escribe una dirección.");
+        return;
+      }
+
+      geocoder.geocode({ address: direccion }, (resultados, estado) => {
+        if (estado === "OK") {
+          const ubicacion = resultados[0].geometry.location;
+          map.setCenter(ubicacion);
+          map.setZoom(15);
+          marcador.setPosition(ubicacion);
+          marcador.setAnimation(google.maps.Animation.DROP);
+          infoWindow.setContent(`<strong>${resultados[0].formatted_address}</strong>`);
+          infoWindow.open(map, marcador);
+        } else {
+          alert("❌ No se pudo encontrar ese lugar: " + estado);
+        }
+      });
+    }
+
+    function miUbicacion() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(posicion => {
+          const ubicacion = {
+            lat: posicion.coords.latitude,
+            lng: posicion.coords.longitude
+          };
+          map.setCenter(ubicacion);
+          map.setZoom(15);
+          marcador.setPosition(ubicacion);
+          marcador.setAnimation(google.maps.Animation.BOUNCE);
+          infoWindow.setContent("<strong>📍 Estás aquí</strong>");
+          infoWindow.open(map, marcador);
+        }, error => {
+          alert("⚠️ No se pudo obtener tu ubicación.");
+        });
+      } else {
+        alert("🚫 Tu navegador no soporta geolocalización.");
+      }
+    }
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
